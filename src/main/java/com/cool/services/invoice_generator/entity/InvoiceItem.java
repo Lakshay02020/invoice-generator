@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-class InvoiceItem {
+public  class InvoiceItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
