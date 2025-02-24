@@ -19,10 +19,10 @@ public class InvoiceServiceImpl implements InvoiceService {
     public Resource generateInvoice(Invoice invoice) {
         // Define the PDF file path
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        String filePath = "invoice.pdf";
-
         // Call the helper class to generate PDF
-        InvoicePdfHelper.generateInvoicePdf(outputStream, filePath, invoice);
+        InvoicePdfHelper invoicePdfHelper = new InvoicePdfHelper();
+        invoicePdfHelper.generateInvoicePdf(outputStream, invoice);
+
         return new ByteArrayResource(outputStream.toByteArray());
 
     }

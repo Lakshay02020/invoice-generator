@@ -17,32 +17,27 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static com.cool.services.invoice_generator.constant.ApplicationConstant.INVOICE;
+import static com.cool.services.invoice_generator.constant.FileExtensionConstant.PDF_EXTENSION;
+
 public class InvoicePdfHelper {
-    public static void generateInvoicePdf(ByteArrayOutputStream outputStream, String filePath, Invoice invoice) {
-        // Ensure it's a PDF file
-        if (!filePath.endsWith(".pdf")) {
-            filePath += ".pdf";
-        }
+    public void generateInvoicePdf(ByteArrayOutputStream outputStream, Invoice invoice) {
+        // Ensure it's a PDF file, for future use to save in db
+        String filePath = INVOICE + "_" + invoice.getId() + "_" + PDF_EXTENSION;
+        Document document = getDocument(outputStream);
+        createDocument(document, invoice);
+        document.close();
+        System.out.println("Invoice PDF Created Successfully!");
+    }
 
-        // Save in a specific folder
-        File file = new File("invoices/");
-        if (!file.exists()) file.mkdirs(); // Create directory if not exists
-        filePath = "invoices/" + filePath;
-
-        PdfWriter writer = new PdfWriter(outputStream);
-        PdfDocument pdf = new PdfDocument(writer);
-        Document document = new Document(pdf);
-
+    private void createDocument(Document document, Invoice invoice){
         // Title
         document.add(new Paragraph("Invoice")
                 .setBold()
                 .setFontSize(20)
                 .setMarginBottom(10));
 
-        // Customer Details
-        document.add(new Paragraph("Customer: " + invoice.getCustomerName()));
-        document.add(new Paragraph("Email: " + invoice.getCustomerEmail()));
-        document.add(new Paragraph("Date: " + invoice.getInvoiceDate()));
+        addCustomerDetails(document, invoice);
 
         // Add Table for Invoice Items
         document.add(new Paragraph("\nInvoice Items:"));
@@ -72,8 +67,18 @@ public class InvoicePdfHelper {
         // Total Amount
         document.add(new Paragraph("\nTotal Amount: $" + invoice.getTotalAmount()).setBold());
 
-        document.close();
-        System.out.println("Invoice PDF Created Successfully!");
+    }
 
+    private Document getDocument(ByteArrayOutputStream outputStream){
+        PdfWriter writer = new PdfWriter(outputStream);
+        PdfDocument pdf = new PdfDocument(writer);
+        return new Document(pdf);
+    };
+
+    private void addCustomerDetails(Document document, Invoice invoice){
+        // Customer Details
+        document.add(new Paragraph("Customer: " + invoice.getCustomerName()));
+        document.add(new Paragraph("Email: " + invoice.getCustomerEmail()));
+        document.add(new Paragraph("Date: " + invoice.getInvoiceDate()));
     }
 }
