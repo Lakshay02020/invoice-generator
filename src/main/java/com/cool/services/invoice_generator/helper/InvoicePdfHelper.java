@@ -17,36 +17,52 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static com.cool.services.invoice_generator.constant.ApplicationConstant.*;
+import static com.cool.services.invoice_generator.constant.FileExtensionConstant.PDF_EXTENSION;
+
 public class InvoicePdfHelper {
-    public static void generateInvoicePdf(ByteArrayOutputStream outputStream, String filePath, Invoice invoice) {
-        // Ensure it's a PDF file
-        if (!filePath.endsWith(".pdf")) {
-            filePath += ".pdf";
-        }
+    public void generateInvoicePdf(ByteArrayOutputStream outputStream, Invoice invoice) {
+        // Ensure it's a PDF file, for future use to save in db
+//        String filePath = INVOICE + "_" + invoice.getId() + "_" + PDF_EXTENSION;
+        Document document = getDocument(outputStream);
+        createDocument(document, invoice);
+        document.close();
+        System.out.println("Invoice PDF Created Successfully!");
+    }
 
-        // Save in a specific folder
-        File file = new File("invoices/");
-        if (!file.exists()) file.mkdirs(); // Create directory if not exists
-        filePath = "invoices/" + filePath;
+    private void createDocument(Document document, Invoice invoice){
 
+        addHeader(document);
+        addCustomerDetails(document, invoice);
+
+        document.add(new Paragraph("\nInvoice Items:"));
+        addDocumentTable(invoice, document);
+
+        // Total Amount
+        document.add(new Paragraph("\nTotal Amount: $" + invoice.getTotalAmount()).setBold());
+
+    }
+    private void addHeader(Document document){
+        document.add(new Paragraph(INVOICE_HEADER)
+                .setBold()
+                .setFontSize(HEADER_FONT_SIZE)
+                .setMarginBottom(HEADER_MARGIN_SIZE));
+    }
+
+    private Document getDocument(ByteArrayOutputStream outputStream){
         PdfWriter writer = new PdfWriter(outputStream);
         PdfDocument pdf = new PdfDocument(writer);
-        Document document = new Document(pdf);
+        return new Document(pdf);
+    };
 
-        // Title
-        document.add(new Paragraph("Invoice")
-                .setBold()
-                .setFontSize(20)
-                .setMarginBottom(10));
-
+    private void addCustomerDetails(Document document, Invoice invoice){
         // Customer Details
         document.add(new Paragraph("Customer: " + invoice.getCustomerName()));
         document.add(new Paragraph("Email: " + invoice.getCustomerEmail()));
         document.add(new Paragraph("Date: " + invoice.getInvoiceDate()));
+    }
 
-        // Add Table for Invoice Items
-        document.add(new Paragraph("\nInvoice Items:"));
-
+    private void addDocumentTable(Invoice invoice, Document document){
         Table table = new Table(UnitValue.createPercentArray(new float[]{40, 20, 20, 20})) // Column widths
                 .useAllAvailableWidth();
 
@@ -68,12 +84,5 @@ public class InvoicePdfHelper {
         }
 
         document.add(table);
-
-        // Total Amount
-        document.add(new Paragraph("\nTotal Amount: $" + invoice.getTotalAmount()).setBold());
-
-        document.close();
-        System.out.println("Invoice PDF Created Successfully!");
-
     }
 }
