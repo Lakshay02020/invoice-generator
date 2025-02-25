@@ -24,6 +24,5 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoicePdfHelper.generateInvoicePdf(outputStream, invoice);
 
         return new ByteArrayResource(outputStream.toByteArray());
-
     }
 }
