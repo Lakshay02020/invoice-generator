@@ -20,6 +20,17 @@ public class Invoice{
     private String customerEmail;
     private String invoiceDate;
 
+    // Seller Details
+    private String sellerName; // Name of the seller
+    private String sellerAddress; // Address of the seller
+    private String sellerGstNumber; // Seller's GST number
+    private String sellerPanNumber; // Seller's PAN number
+
+    // Buyer Details
+    private String buyerName; // Customer/buyer name
+    private String buyerAddress; // Customer billing/shipping address
+    private String buyerGstNumber; // Buyer's GST number (if applicable)
+
     private BigDecimal totalAmount;
     private BigDecimal totalGST; // Total GST Amount (CGST + SGST or IGST)
     private BigDecimal totalAmountAfterGst; // Final amount after tax
