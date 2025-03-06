@@ -1,6 +1,7 @@
 package com.cool.services.invoice_generator.controller;
 
 import com.cool.services.invoice_generator.entity.Invoice;
+import com.cool.services.invoice_generator.feingClient.EmailFeignProvider;
 import com.cool.services.invoice_generator.services.InvoiceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +20,12 @@ public class InvoiceController {
     @Autowired
     private InvoiceService invoiceService;
 
+    @Autowired
+    EmailFeignProvider emailFeignProvider;
+
     @GetMapping("/getInvoice")
     public String getInvoice() {
+//        emailFeignProvider.sendMail("mail@gmail.com", "From Invoice", "INVOICE");
         return "Successfully Up and running";
     }
 
