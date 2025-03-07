@@ -27,13 +27,13 @@ public class InvoiceServiceImpl implements InvoiceService {
         // Call the helper class to generate PDF
         InvoicePdfHelper invoicePdfHelper = new InvoicePdfHelper();
         invoicePdfHelper.generateInvoicePdf(outputStream, invoice);
-        sendInvoiceViaEmail(invoice, outputStream);
+//        sendInvoiceViaEmail(invoice, outputStream);
         return new ByteArrayResource(outputStream.toByteArray());
     }
 
     void sendInvoiceViaEmail(Invoice invoice, ByteArrayOutputStream outputStream){
         MultipartFile multipartFile = convertToFile(outputStream);
-        String email = "";
+        String email = "lakshay02singla@gmail.com";
         String text = "Dear " + invoice.getCustomerName() + "\n\n"
                 + "Thank you for your purchase. Please find attached the invoice for your order #1234"  + "\n"
                 + "\nInvoice Details:\n"
