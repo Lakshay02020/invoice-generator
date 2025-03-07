@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Data
@@ -15,10 +16,11 @@ import java.util.List;
 public class Invoice{
     @Id // Primary Key
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
     private String customerName;
     private String customerEmail;
     private String invoiceDate;
+    private String orderNumber;
 
     // Seller Details
     private String sellerName; // Name of the seller

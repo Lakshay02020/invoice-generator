@@ -32,36 +32,39 @@ public class InvoicePdfHelper {
             throw new RuntimeException("Error creating PDF: " + e.getMessage(), e);
         }
     }
-
     private void addSellerDetails(Document document, Invoice invoice) throws DocumentException {
-        PdfPTable sellerTable = new PdfPTable(2); // 2 columns for 50-50 width
-        sellerTable.setWidthPercentage(100); // Table fills the page
+        PdfPTable sellerTable = new PdfPTable(2);
+        sellerTable.setWidthPercentage(100);
+        sellerTable.setWidths(new float[]{70, 30}); // 70% for seller details, 30% empty
 
-        // "Sold By" row
+        // "Sold By" details
         PdfPCell sellerCell = new PdfPCell();
         sellerCell.setBorder(Rectangle.NO_BORDER);
 
         Phrase sellerInfo = new Phrase();
-        sellerInfo.add(new Chunk("Sold By: ", FontFactory.getFont(FontFactory.HELVETICA_BOLD))); // Bold label
-        sellerInfo.add(new Chunk(invoice.getSellerName())); // Seller name
+        sellerInfo.add(new Chunk("Sold By: ", FontFactory.getFont(FontFactory.HELVETICA_BOLD)));
+        sellerInfo.add(new Chunk(invoice.getSellerName(), FontFactory.getFont(FontFactory.HELVETICA, 12))); // Normal text
+
         sellerCell.addElement(new Paragraph(sellerInfo));
 
-        // Seller address
         sellerCell.addElement(new Paragraph(invoice.getSellerAddress()));
 
-        // PAN Number
         Phrase panInfo = new Phrase();
-        panInfo.add(new Chunk("PAN No: ", FontFactory.getFont(FontFactory.HELVETICA_BOLD))); // Bold label
-        panInfo.add(new Chunk(invoice.getSellerPanNumber())); // PAN number
+        panInfo.add(new Chunk("PAN No: ", FontFactory.getFont(FontFactory.HELVETICA_BOLD)));
+        panInfo.add(new Chunk(invoice.getSellerPanNumber(), FontFactory.getFont(FontFactory.HELVETICA, 12)));
         sellerCell.addElement(new Paragraph(panInfo));
 
-        // GST Number
         Phrase gstInfo = new Phrase();
-        gstInfo.add(new Chunk("GST Registration No: ", FontFactory.getFont(FontFactory.HELVETICA_BOLD))); // Bold label
-        gstInfo.add(new Chunk(invoice.getSellerGstNumber())); // GST number
+        gstInfo.add(new Chunk("GST Registration No: ", FontFactory.getFont(FontFactory.HELVETICA_BOLD)));
+        gstInfo.add(new Chunk(invoice.getSellerGstNumber(), FontFactory.getFont(FontFactory.HELVETICA, 12)));
         sellerCell.addElement(new Paragraph(gstInfo));
 
         sellerTable.addCell(sellerCell);
+
+        // Add an empty cell for the second column
+        PdfPCell emptyCell = new PdfPCell();
+        emptyCell.setBorder(Rectangle.NO_BORDER);
+        sellerTable.addCell(emptyCell);
 
         // Add table to document
         document.add(sellerTable);
@@ -70,13 +73,15 @@ public class InvoicePdfHelper {
     private void addHeader(Document document, Invoice invoice) throws DocumentException {
         PdfPTable header = new PdfPTable(2);
         header.setWidthPercentage(100);
-        header.setWidths(new float[]{30, 70});
+        // Adjusted such that left and right corners are maintained
+        header.setWidths(new float[]{60, 40});
 
         PdfPCell logoCell = getLogoCell();
         PdfPCell invoiceCell = new PdfPCell();
-        invoiceCell.addElement(new Paragraph("Tax Invoice/Bill of Supply"));
+        invoiceCell.addElement(new Paragraph(new Chunk("Tax Invoice/Bill of Supply",
+                FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12))));
         invoiceCell.addElement(new Paragraph("Invoice Number: " + invoice.getId()));
-        invoiceCell.addElement(new Paragraph("Order Number: Xyz124"));
+        invoiceCell.addElement(new Paragraph("Order Number: #" + invoice.getOrderNumber()));
         invoiceCell.addElement(new Paragraph("Invoice Date: " + invoice.getInvoiceDate()));
         invoiceCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
         invoiceCell.setBorder(Rectangle.NO_BORDER);
@@ -113,6 +118,7 @@ public class InvoicePdfHelper {
         billingCell.addElement(new Paragraph(invoice.getBuyerAddress()));
         billingCell.addElement(new Paragraph("State/UT Code: PUNJAB"));
         billingCell.setBorder(Rectangle.NO_BORDER);
+        billingCell.setPaddingRight(40);
 
         PdfPCell shippingCell = new PdfPCell();
         shippingCell.addElement(new Paragraph("Shipping Address:"));
@@ -121,14 +127,14 @@ public class InvoicePdfHelper {
         shippingCell.addElement(new Paragraph("State/UT Code: PUNJAB"));
         shippingCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
         shippingCell.setBorder(Rectangle.NO_BORDER);
-
+        shippingCell.setPaddingLeft(85);
         addressTable.addCell(billingCell);
         addressTable.addCell(shippingCell);
         document.add(addressTable);
     }
 
     private void addInvoiceData(Document document, Invoice invoice) throws DocumentException {
-        document.add(new Paragraph("\nInvoice Items:"));
+        document.add(new Paragraph("\nInvoice Items:\n\n", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12)));
         invoice.calculateTotal();
         addDocumentTable(invoice, document);
         addTotalData(invoice, document);
@@ -137,24 +143,27 @@ public class InvoicePdfHelper {
     private void addDocumentTable(Invoice invoice, Document document) throws DocumentException {
         PdfPTable table = new PdfPTable(7);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{15, 15, 10, 10, 15, 15, 20});
+        table.setWidths(new float[]{15, 15, 12, 13, 10, 15, 20});
 
         String[] headers = {"HSN Code", "Description", "Quantity", "Price", "Tax (%)", "Tax Amount", "Total (incl. tax)"};
         for (String header : headers) {
             PdfPCell headerCell = new PdfPCell(new Phrase(header));
             headerCell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+            headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);  // Center horizontally
+            headerCell.setVerticalAlignment(Element.ALIGN_MIDDLE);   // Center vertically
+            headerCell.setPadding(5);
             table.addCell(headerCell);
         }
 
         List<InvoiceItem> items = invoice.getItems();
         for (InvoiceItem item : items) {
-            table.addCell(item.getHsnCode());
-            table.addCell(item.getDescription());
-            table.addCell(String.valueOf(item.getQuantity()));
-            table.addCell(String.valueOf(item.getPrice()));
-            table.addCell(String.valueOf(item.getGstRate()));
-            table.addCell(String.valueOf(item.getGstAmount()));
-            table.addCell(String.valueOf(item.getTotalPriceAfterGst()));
+            table.addCell(getCenteredCell(item.getHsnCode()));
+            table.addCell(getCenteredCell(item.getDescription()));
+            table.addCell(getCenteredCell(String.valueOf(item.getQuantity())));
+            table.addCell(getCenteredCell(String.valueOf(item.getPrice())));
+            table.addCell(getCenteredCell(String.valueOf(item.getGstRate())));
+            table.addCell(getCenteredCell(String.valueOf(item.getGstAmount())));
+            table.addCell(getCenteredCell(String.valueOf(item.getTotalPriceAfterGst())));
         }
 
         document.add(table);
@@ -162,21 +171,29 @@ public class InvoicePdfHelper {
         document.add(new LineSeparator());
     }
 
+    // Helper method to create a centered cell
+    private PdfPCell getCenteredCell(String text) {
+        PdfPCell cell = new PdfPCell(new Phrase(text));
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER); // Align text to center
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);  // Align text vertically
+        cell.setPadding(5);
+        return cell;
+    }
+
     private void addTotalData(Invoice invoice, Document document) throws DocumentException {
         PdfPTable totalTable = new PdfPTable(2);
         totalTable.setWidthPercentage(100);
         totalTable.setWidths(new float[]{70, 30});
 
-        totalTable.addCell(new PdfPCell(new Phrase("Subtotal:")));
-        totalTable.addCell(new PdfPCell(new Phrase("₹" + invoice.getTotalAmount())));
+        totalTable.addCell(getCenteredCell("Subtotal:"));
+        totalTable.addCell(getCenteredCell("Rs " + invoice.getTotalAmount()));
 
-        totalTable.addCell(new PdfPCell(new Phrase("Total Tax:")));
-        totalTable.addCell(new PdfPCell(new Phrase("₹" + invoice.getTotalGST())));
+        totalTable.addCell(getCenteredCell("Total Tax:"));
+        totalTable.addCell(getCenteredCell("Rs " + invoice.getTotalGST()));
 
-        PdfPCell totalCell = new PdfPCell(new Phrase("Total Amount (incl. Tax):"));
-        totalCell.setColspan(1);
+        PdfPCell totalCell = getCenteredCell("Total Amount (incl. Tax):");
         totalTable.addCell(totalCell);
-        totalTable.addCell(new PdfPCell(new Phrase("₹" + invoice.getTotalAmountAfterGst())));
+        totalTable.addCell(getCenteredCell("Rs " + invoice.getTotalAmountAfterGst()));
 
         document.add(totalTable);
     }
