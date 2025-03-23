@@ -16,7 +16,7 @@ import java.util.UUID;
 public class Invoice{
     @Id // Primary Key
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
+    private Long id;
     private String customerName;
     private String customerEmail;
     private String invoiceDate;
